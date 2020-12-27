@@ -46,8 +46,8 @@ N64_Controller.bin \
 all: N64_Controller.elf secondary-outputs
 
 # Tool invocations
-N64_Controller.elf: $(OBJS) $(USER_OBJS) C:\Code\N64_Controller\STM32F446RETX_FLASH.ld
-	arm-none-eabi-gcc -o "N64_Controller.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Code\N64_Controller\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="N64_Controller.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+N64_Controller.elf: $(OBJS) $(USER_OBJS) C:\Code\N64_Controller_STM32F446RE\N64_Controller\STM32F446RETX_FLASH.ld
+	arm-none-eabi-gcc -o "N64_Controller.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Code\N64_Controller_STM32F446RE\N64_Controller\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="N64_Controller.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

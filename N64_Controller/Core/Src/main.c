@@ -42,6 +42,10 @@
 #define ONE_VALUE_LOW             1
 #define ONE_VALUE_HIGH            5
 
+// The polling signal from the N64 is 7 zeros followed by 2 ones
+#define ZERO_POLL_COUNT           7
+#define ONE_POLL_COUNT            2
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -63,17 +67,21 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+// The state defaults to high
 uint8_t current_state = 1;
+
+// Counter for how long the signal has been low
 uint8_t low_count = 0;
 
+// Counting how many zeros and ones the N64 has sent
 uint8_t zero_count = 0;
 uint8_t one_count = 0;
 
+// Timestamp used for counting milliseconds
 uint32_t timestamp = 0;
 
-uint8_t response_count = 0;
-uint8_t response_bits[32];
-
+// Union containing struct/array of the N64 controller
 N64_controller_u N64_controller;
 N64_controller_u N64_controller_zero_status;
 
@@ -112,15 +120,14 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  // Enable timer 1 for microsecond delay
   HAL_TIM_Base_Start(&htim1);
-  //HAL_TIM_Base_Start_IT(&htim3);
+
+  // Enable timer 3 for millisecond counting
+  HAL_TIM_Base_Start_IT(&htim3);
 
   // Initialize controller status
-  Update_Controller_Status(&N64_controller, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 201, 251);
-  //Update_Controller_Status(&N64_controller, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-
-  uint8_t data[100] = {0};
-  uint8_t data_time[100] = {0};
+  Update_Controller_Status(&N64_controller, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
   /* USER CODE END 2 */
 
@@ -128,6 +135,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  // Read state of the data pin
 	  current_state = HAL_GPIO_ReadPin(DATA_IN_GPIO_Port, DATA_IN_Pin);
 
 	  if (current_state == 0) {
@@ -147,57 +155,27 @@ int main(void)
 			  one_count++;
 		  }
 
-		  // If we hit 7 zeros and 2 ones, polling signal is here
-		  if (one_count == 2) {
-			  if (zero_count == 7) {
+		  // If we collect 7 zeros and 2 ones, polling signal is here
+		  if (one_count == ONE_POLL_COUNT) {
+			  if (zero_count == ZERO_POLL_COUNT) {
 				  // If enough time has passed, respond with controller status
-				  if (millisecond_counter - timestamp >= 20) {
-					  // Need to respond with controller status here
+				  if (millisecond_counter - timestamp >= 2000) {
 					  // Disable timer 3 global interrupt
 					  HAL_TIM_Base_Stop_IT(&htim3);
-
+					  // Respond with controller status here
 					   Press_Buttons(&N64_controller);
 					  // Start up timer interrupt
 					  HAL_TIM_Base_Start_IT(&htim3);
-					  //timestamp = millisecond_counter;
-					  /*
-					  while(response_count < 32){
-						  current_state = HAL_GPIO_ReadPin(DATA_IN_GPIO_Port, DATA_IN_Pin);
-						  low_count = 0;
-						  if (current_state == 0) {
-						 		  // Count while low
-						 		  while (current_state == 0) {
-						 			  low_count++;
-						 			  current_state = HAL_GPIO_ReadPin(DATA_IN_GPIO_Port, DATA_IN_Pin);
-						 		  }
-
-						 		  // This value is a "zero" count
-						 		  if (ZERO_VALUE_LOW < low_count && low_count < ZERO_VALUE_HIGH) {
-						 			 data[response_count] = 0+48;
-						 		  }
-
-						 		  // This value is a "one" count
-						 		  if (ONE_VALUE_LOW < low_count && low_count < ONE_VALUE_HIGH) {
-						 			  data[response_count] = 1+48;
-						 		  }
-
-						 		  response_count++;
-						  }
-
-					  }
-					  response_count = 0;
-					  sprintf(data_time, "    | %lu\n\r ", timestamp);
-					  //sprintf(data, "%lu \n\r ", timestamp);
-					  HAL_UART_Transmit(&huart2, data, 100, HAL_MAX_DELAY);
-					  HAL_UART_Transmit(&huart2, data_time, 100, HAL_MAX_DELAY);
-					  */
+					  timestamp = millisecond_counter;
 				  } else { // Just send all zeros as if controller isn't doing anything
 					  // Disable timer 3 global interrupt
 					  HAL_TIM_Base_Stop_IT(&htim3);
+					  // Respond with controller zero status here
 					  Press_Buttons(&N64_controller_zero_status);
 					  // Start up timer interrupt
 					  HAL_TIM_Base_Start_IT(&htim3);
 				  }
+				  // Reset counts
 				  zero_count = 0;
 				  one_count = 0;
 			  }
@@ -211,16 +189,19 @@ int main(void)
 			  }
 		  }
 
-		  // If too many zeros come in, reset count
+		  // If too many zeros come in, reset counts
 		  if (zero_count > 7) {
 			  zero_count = 0;
-		  }
-
-		  // If too many ones come in, reset count
-		  if (one_count > 2) {
 			  one_count = 0;
 		  }
 
+		  // If too many ones come in, reset counts
+		  if (one_count > 2) {
+			  zero_count = 0;
+			  one_count = 0;
+		  }
+
+		  // Reset low counter
 		  low_count = 0;
 	  }
     /* USER CODE END WHILE */
