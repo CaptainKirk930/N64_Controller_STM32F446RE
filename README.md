@@ -19,7 +19,7 @@ This struct/array can also be edited by calling functions like: Update_Controlle
 
 The main loop is polling constantly for the signal sent from the N64 and will respond with what the N64_controller struct/array is currently set to.
 
-I hope this is obvious, however, messing around with your N64 and controllers may result in damage to the system and/or controllers. I am not responsible for any action(s) you take in using this code to have some fun. 
+I hope this is obvious, however, messing around with your N64 and controllers may result in damage to the system and/or controllers. I am not responsible for any damage to your system/controllers.
 
 This is a work in progress.
 
