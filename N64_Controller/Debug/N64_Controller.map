@@ -3803,11 +3803,11 @@ OUTPUT(N64_Controller.elf elf32-littlearm)
  .debug_line    0x000000000000974b      0xfd4 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o
 
 .debug_str      0x0000000000000000    0xcb945
- .debug_str     0x0000000000000000    0xc82ab Core/Src/N64_Controls.o
-                                      0xc860b (size before relaxing)
- .debug_str     0x00000000000c82ab      0x183 Core/Src/gpio.o
+ .debug_str     0x0000000000000000    0xc8289 Core/Src/N64_Controls.o
+                                      0xc85e9 (size before relaxing)
+ .debug_str     0x00000000000c8289      0x1dd Core/Src/gpio.o
                                       0xc7fb8 (size before relaxing)
- .debug_str     0x00000000000c842e      0x41a Core/Src/main.o
+ .debug_str     0x00000000000c8466      0x3e2 Core/Src/main.o
                                       0xc88c5 (size before relaxing)
  .debug_str     0x00000000000c8848       0x2c Core/Src/stm32f4xx_hal_msp.o
                                       0xc7f1d (size before relaxing)

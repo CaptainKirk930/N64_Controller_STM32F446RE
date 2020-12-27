@@ -11,6 +11,7 @@ void delay (uint16_t delay) {
 	while (__HAL_TIM_GET_COUNTER(&htim1) < delay);
 }
 
+// Zero is sent with 3 microseconds low and 1 microsecond high
 void Send_Zero() {
 	// Set pin low
     HAL_GPIO_WritePin(DATA_OUT_GPIO_Port, DATA_OUT_Pin, GPIO_PIN_RESET);
@@ -21,6 +22,7 @@ void Send_Zero() {
     delay(MICROSECOND_DELAY);
 }
 
+// One is sent with 1 microsecond low and 3 microseconds high
 void Send_One() {
 	// Set pin low
 	HAL_GPIO_WritePin(DATA_OUT_GPIO_Port, DATA_OUT_Pin, GPIO_PIN_RESET);
@@ -133,10 +135,14 @@ void Update_Controller_Y_Axis(N64_controller_u *N64_controller, uint8_t Y_axis) 
 	N64_controller->N64_controller_s.Y_Axis = Y_axis;
 }
 
+// This function will send a signal back to the N64 of the current status of the N64_controller union
 void Press_Buttons(N64_controller_u *N64_controller) {
 
+	// Loop through all the buttons
 	for (uint8_t i = 0; i < MAX_BUTTONS_TO_PRESS; i++) {
+		// Loop through each bit
 		for (uint8_t j = 0; j < BYTE; j++) {
+			// If bit is set to 1, send a one to N64, else send a zero
 			if ( (N64_controller->N64_controller_a[i] & (0x01 << j)) == (1 << j)) {
 				Send_One();
 			} else {

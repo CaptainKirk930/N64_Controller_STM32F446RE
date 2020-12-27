@@ -18,7 +18,6 @@
 #define BYTE                      8
 
 // N64 Controller Struct
-
 typedef struct __attribute__ ((packed)){
 	// Byte 0
 	uint8_t A_Button:1;
@@ -44,11 +43,13 @@ typedef struct __attribute__ ((packed)){
 	uint8_t Y_Axis:8;
 }N64_controller_t;
 
+// Made a union so I could treat struct as an array when needed
 typedef union {
 	N64_controller_t N64_controller_s;
 	uint8_t N64_controller_a[4];
 }N64_controller_u;
 
+// This is a microsecond delay
 void delay (uint16_t delay);
 
 void Send_Zero();
@@ -75,6 +76,7 @@ void Update_Controller_C_Right(N64_controller_u *N64_controller, uint8_t C_right
 void Update_Controller_X_Axis(N64_controller_u *N64_controller, uint8_t X_axis);
 void Update_Controller_Y_Axis(N64_controller_u *N64_controller, uint8_t Y_axis);
 
+// Sends controller status to N64
 void Press_Buttons(N64_controller_u *N64_controller);
 
 #endif /* INC_N64_CONTROLS_H_ */

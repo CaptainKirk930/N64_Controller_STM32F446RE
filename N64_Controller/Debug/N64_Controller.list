@@ -354,15 +354,23 @@ Disassembly of section .text:
  8000502:	bf00      	nop
 
 08000504 <delay>:
+ *  Created on: Dec 24, 2020
+ *      Author: John Kirkpatrick
+ */
+#include "N64_Controls.h"
+
+void delay (uint16_t delay) {
  8000504:	b480      	push	{r7}
  8000506:	b083      	sub	sp, #12
  8000508:	af00      	add	r7, sp, #0
  800050a:	4603      	mov	r3, r0
  800050c:	80fb      	strh	r3, [r7, #6]
+	__HAL_TIM_SET_COUNTER (&htim1, 0);
  800050e:	4b08      	ldr	r3, [pc, #32]	; (8000530 <delay+0x2c>)
  8000510:	681b      	ldr	r3, [r3, #0]
  8000512:	2200      	movs	r2, #0
  8000514:	625a      	str	r2, [r3, #36]	; 0x24
+	while (__HAL_TIM_GET_COUNTER(&htim1) < delay);
  8000516:	bf00      	nop
  8000518:	4b05      	ldr	r3, [pc, #20]	; (8000530 <delay+0x2c>)
  800051a:	681b      	ldr	r3, [r3, #0]
@@ -370,6 +378,7 @@ Disassembly of section .text:
  800051e:	88fb      	ldrh	r3, [r7, #6]
  8000520:	429a      	cmp	r2, r3
  8000522:	d3f9      	bcc.n	8000518 <delay+0x14>
+}
  8000524:	bf00      	nop
  8000526:	370c      	adds	r7, #12
  8000528:	46bd      	mov	sp, r7
@@ -378,46 +387,72 @@ Disassembly of section .text:
  8000530:	20000080 	.word	0x20000080
 
 08000534 <Send_Zero>:
+
+// Zero is sent with 3 microseconds low and 1 microsecond high
+void Send_Zero() {
  8000534:	b580      	push	{r7, lr}
  8000536:	af00      	add	r7, sp, #0
+	// Set pin low
+    HAL_GPIO_WritePin(DATA_OUT_GPIO_Port, DATA_OUT_Pin, GPIO_PIN_RESET);
  8000538:	2200      	movs	r2, #0
  800053a:	f44f 7180 	mov.w	r1, #256	; 0x100
  800053e:	4809      	ldr	r0, [pc, #36]	; (8000564 <Send_Zero+0x30>)
  8000540:	f001 f826 	bl	8001590 <HAL_GPIO_WritePin>
+    delay(THREE_MICROSECOND_DELAY);
  8000544:	f240 10c7 	movw	r0, #455	; 0x1c7
  8000548:	f7ff ffdc 	bl	8000504 <delay>
+
+    // Set pin high
+    HAL_GPIO_WritePin(DATA_OUT_GPIO_Port, DATA_OUT_Pin, GPIO_PIN_SET);
  800054c:	2201      	movs	r2, #1
  800054e:	f44f 7180 	mov.w	r1, #256	; 0x100
  8000552:	4804      	ldr	r0, [pc, #16]	; (8000564 <Send_Zero+0x30>)
  8000554:	f001 f81c 	bl	8001590 <HAL_GPIO_WritePin>
+    delay(MICROSECOND_DELAY);
  8000558:	2050      	movs	r0, #80	; 0x50
  800055a:	f7ff ffd3 	bl	8000504 <delay>
+}
  800055e:	bf00      	nop
  8000560:	bd80      	pop	{r7, pc}
  8000562:	bf00      	nop
  8000564:	40020000 	.word	0x40020000
 
 08000568 <Send_One>:
+
+// One is sent with 1 microsecond low and 3 microseconds high
+void Send_One() {
  8000568:	b580      	push	{r7, lr}
  800056a:	af00      	add	r7, sp, #0
+	// Set pin low
+	HAL_GPIO_WritePin(DATA_OUT_GPIO_Port, DATA_OUT_Pin, GPIO_PIN_RESET);
  800056c:	2200      	movs	r2, #0
  800056e:	f44f 7180 	mov.w	r1, #256	; 0x100
  8000572:	4809      	ldr	r0, [pc, #36]	; (8000598 <Send_One+0x30>)
  8000574:	f001 f80c 	bl	8001590 <HAL_GPIO_WritePin>
+	delay(MICROSECOND_DELAY);
  8000578:	2050      	movs	r0, #80	; 0x50
  800057a:	f7ff ffc3 	bl	8000504 <delay>
+
+	// Set pin high
+	HAL_GPIO_WritePin(DATA_OUT_GPIO_Port, DATA_OUT_Pin, GPIO_PIN_SET);
  800057e:	2201      	movs	r2, #1
  8000580:	f44f 7180 	mov.w	r1, #256	; 0x100
  8000584:	4804      	ldr	r0, [pc, #16]	; (8000598 <Send_One+0x30>)
  8000586:	f001 f803 	bl	8001590 <HAL_GPIO_WritePin>
+	delay(THREE_MICROSECOND_DELAY);
  800058a:	f240 10c7 	movw	r0, #455	; 0x1c7
  800058e:	f7ff ffb9 	bl	8000504 <delay>
+}
  8000592:	bf00      	nop
  8000594:	bd80      	pop	{r7, pc}
  8000596:	bf00      	nop
  8000598:	40020000 	.word	0x40020000
 
 0800059c <Update_Controller_Status>:
+
+void Update_Controller_Status(N64_controller_u *N64_controller, uint8_t A, uint8_t B, uint8_t Z,
+		uint8_t start, uint8_t up, uint8_t down, uint8_t left, uint8_t right, uint8_t left_bumper, uint8_t right_bumper,
+		uint8_t C_up, uint8_t C_down, uint8_t C_left, uint8_t C_right, uint8_t X_axis, uint8_t Y_axis) {
  800059c:	b480      	push	{r7}
  800059e:	b083      	sub	sp, #12
  80005a0:	af00      	add	r7, sp, #0
@@ -431,6 +466,8 @@ Disassembly of section .text:
  80005b0:	70bb      	strb	r3, [r7, #2]
  80005b2:	4613      	mov	r3, r2
  80005b4:	707b      	strb	r3, [r7, #1]
+
+	N64_controller->N64_controller_s.A_Button = A;
  80005b6:	78fb      	ldrb	r3, [r7, #3]
  80005b8:	f003 0301 	and.w	r3, r3, #1
  80005bc:	b2d9      	uxtb	r1, r3
@@ -438,6 +475,7 @@ Disassembly of section .text:
  80005c0:	7813      	ldrb	r3, [r2, #0]
  80005c2:	f361 0300 	bfi	r3, r1, #0, #1
  80005c6:	7013      	strb	r3, [r2, #0]
+	N64_controller->N64_controller_s.B_Button = B;
  80005c8:	78bb      	ldrb	r3, [r7, #2]
  80005ca:	f003 0301 	and.w	r3, r3, #1
  80005ce:	b2d9      	uxtb	r1, r3
@@ -445,6 +483,7 @@ Disassembly of section .text:
  80005d2:	7813      	ldrb	r3, [r2, #0]
  80005d4:	f361 0341 	bfi	r3, r1, #1, #1
  80005d8:	7013      	strb	r3, [r2, #0]
+	N64_controller->N64_controller_s.Z_Button = Z;
  80005da:	787b      	ldrb	r3, [r7, #1]
  80005dc:	f003 0301 	and.w	r3, r3, #1
  80005e0:	b2d9      	uxtb	r1, r3
@@ -452,6 +491,7 @@ Disassembly of section .text:
  80005e4:	7813      	ldrb	r3, [r2, #0]
  80005e6:	f361 0382 	bfi	r3, r1, #2, #1
  80005ea:	7013      	strb	r3, [r2, #0]
+	N64_controller->N64_controller_s.Start_Button = start;
  80005ec:	7c3b      	ldrb	r3, [r7, #16]
  80005ee:	f003 0301 	and.w	r3, r3, #1
  80005f2:	b2d9      	uxtb	r1, r3
@@ -459,6 +499,7 @@ Disassembly of section .text:
  80005f6:	7813      	ldrb	r3, [r2, #0]
  80005f8:	f361 03c3 	bfi	r3, r1, #3, #1
  80005fc:	7013      	strb	r3, [r2, #0]
+	N64_controller->N64_controller_s.Up_Button = up;
  80005fe:	7d3b      	ldrb	r3, [r7, #20]
  8000600:	f003 0301 	and.w	r3, r3, #1
  8000604:	b2d9      	uxtb	r1, r3
@@ -466,6 +507,7 @@ Disassembly of section .text:
  8000608:	7813      	ldrb	r3, [r2, #0]
  800060a:	f361 1304 	bfi	r3, r1, #4, #1
  800060e:	7013      	strb	r3, [r2, #0]
+	N64_controller->N64_controller_s.Down_Button = down;
  8000610:	7e3b      	ldrb	r3, [r7, #24]
  8000612:	f003 0301 	and.w	r3, r3, #1
  8000616:	b2d9      	uxtb	r1, r3
@@ -473,6 +515,7 @@ Disassembly of section .text:
  800061a:	7813      	ldrb	r3, [r2, #0]
  800061c:	f361 1345 	bfi	r3, r1, #5, #1
  8000620:	7013      	strb	r3, [r2, #0]
+	N64_controller->N64_controller_s.Left_Button = left;
  8000622:	7f3b      	ldrb	r3, [r7, #28]
  8000624:	f003 0301 	and.w	r3, r3, #1
  8000628:	b2d9      	uxtb	r1, r3
@@ -480,6 +523,7 @@ Disassembly of section .text:
  800062c:	7813      	ldrb	r3, [r2, #0]
  800062e:	f361 1386 	bfi	r3, r1, #6, #1
  8000632:	7013      	strb	r3, [r2, #0]
+	N64_controller->N64_controller_s.Right_Button = right;
  8000634:	f897 3020 	ldrb.w	r3, [r7, #32]
  8000638:	f003 0301 	and.w	r3, r3, #1
  800063c:	b2d9      	uxtb	r1, r3
@@ -487,6 +531,7 @@ Disassembly of section .text:
  8000640:	7813      	ldrb	r3, [r2, #0]
  8000642:	f361 13c7 	bfi	r3, r1, #7, #1
  8000646:	7013      	strb	r3, [r2, #0]
+	N64_controller->N64_controller_s.Left_Bumper = left_bumper;
  8000648:	f897 3024 	ldrb.w	r3, [r7, #36]	; 0x24
  800064c:	f003 0301 	and.w	r3, r3, #1
  8000650:	b2d9      	uxtb	r1, r3
@@ -494,6 +539,7 @@ Disassembly of section .text:
  8000654:	7853      	ldrb	r3, [r2, #1]
  8000656:	f361 0382 	bfi	r3, r1, #2, #1
  800065a:	7053      	strb	r3, [r2, #1]
+	N64_controller->N64_controller_s.Right_Bumper = right_bumper;
  800065c:	f897 3028 	ldrb.w	r3, [r7, #40]	; 0x28
  8000660:	f003 0301 	and.w	r3, r3, #1
  8000664:	b2d9      	uxtb	r1, r3
@@ -501,6 +547,7 @@ Disassembly of section .text:
  8000668:	7853      	ldrb	r3, [r2, #1]
  800066a:	f361 03c3 	bfi	r3, r1, #3, #1
  800066e:	7053      	strb	r3, [r2, #1]
+	N64_controller->N64_controller_s.C_Up = C_up;
  8000670:	f897 302c 	ldrb.w	r3, [r7, #44]	; 0x2c
  8000674:	f003 0301 	and.w	r3, r3, #1
  8000678:	b2d9      	uxtb	r1, r3
@@ -508,6 +555,7 @@ Disassembly of section .text:
  800067c:	7853      	ldrb	r3, [r2, #1]
  800067e:	f361 1304 	bfi	r3, r1, #4, #1
  8000682:	7053      	strb	r3, [r2, #1]
+	N64_controller->N64_controller_s.C_Down = C_down;
  8000684:	f897 3030 	ldrb.w	r3, [r7, #48]	; 0x30
  8000688:	f003 0301 	and.w	r3, r3, #1
  800068c:	b2d9      	uxtb	r1, r3
@@ -515,6 +563,7 @@ Disassembly of section .text:
  8000690:	7853      	ldrb	r3, [r2, #1]
  8000692:	f361 1345 	bfi	r3, r1, #5, #1
  8000696:	7053      	strb	r3, [r2, #1]
+	N64_controller->N64_controller_s.C_Left = C_left;
  8000698:	f897 3034 	ldrb.w	r3, [r7, #52]	; 0x34
  800069c:	f003 0301 	and.w	r3, r3, #1
  80006a0:	b2d9      	uxtb	r1, r3
@@ -522,6 +571,7 @@ Disassembly of section .text:
  80006a4:	7853      	ldrb	r3, [r2, #1]
  80006a6:	f361 1386 	bfi	r3, r1, #6, #1
  80006aa:	7053      	strb	r3, [r2, #1]
+	N64_controller->N64_controller_s.C_Right = C_right;
  80006ac:	f897 3038 	ldrb.w	r3, [r7, #56]	; 0x38
  80006b0:	f003 0301 	and.w	r3, r3, #1
  80006b4:	b2d9      	uxtb	r1, r3
@@ -529,12 +579,15 @@ Disassembly of section .text:
  80006b8:	7853      	ldrb	r3, [r2, #1]
  80006ba:	f361 13c7 	bfi	r3, r1, #7, #1
  80006be:	7053      	strb	r3, [r2, #1]
+	N64_controller->N64_controller_s.X_Axis = X_axis;
  80006c0:	687b      	ldr	r3, [r7, #4]
  80006c2:	f897 203c 	ldrb.w	r2, [r7, #60]	; 0x3c
  80006c6:	709a      	strb	r2, [r3, #2]
+	N64_controller->N64_controller_s.Y_Axis = Y_axis;
  80006c8:	687b      	ldr	r3, [r7, #4]
  80006ca:	f897 2040 	ldrb.w	r2, [r7, #64]	; 0x40
  80006ce:	70da      	strb	r2, [r3, #3]
+}
  80006d0:	bf00      	nop
  80006d2:	370c      	adds	r7, #12
  80006d4:	46bd      	mov	sp, r7
@@ -542,16 +595,29 @@ Disassembly of section .text:
  80006da:	4770      	bx	lr
 
 080006dc <Press_Buttons>:
+
+	N64_controller->N64_controller_s.Y_Axis = Y_axis;
+}
+
+// This function will send a signal back to the N64 of the current status of the N64_controller union
+void Press_Buttons(N64_controller_u *N64_controller) {
  80006dc:	b580      	push	{r7, lr}
  80006de:	b084      	sub	sp, #16
  80006e0:	af00      	add	r7, sp, #0
  80006e2:	6078      	str	r0, [r7, #4]
+
+	// Loop through all the buttons
+	for (uint8_t i = 0; i < MAX_BUTTONS_TO_PRESS; i++) {
  80006e4:	2300      	movs	r3, #0
  80006e6:	73fb      	strb	r3, [r7, #15]
  80006e8:	e020      	b.n	800072c <Press_Buttons+0x50>
+		// Loop through each bit
+		for (uint8_t j = 0; j < BYTE; j++) {
  80006ea:	2300      	movs	r3, #0
  80006ec:	73bb      	strb	r3, [r7, #14]
  80006ee:	e017      	b.n	8000720 <Press_Buttons+0x44>
+			// If bit is set to 1, send a one to N64, else send a zero
+			if ( (N64_controller->N64_controller_a[i] & (0x01 << j)) == (1 << j)) {
  80006f0:	7bfb      	ldrb	r3, [r7, #15]
  80006f2:	687a      	ldr	r2, [r7, #4]
  80006f4:	5cd3      	ldrb	r3, [r2, r3]
@@ -565,22 +631,34 @@ Disassembly of section .text:
  8000708:	fa01 f303 	lsl.w	r3, r1, r3
  800070c:	429a      	cmp	r2, r3
  800070e:	d102      	bne.n	8000716 <Press_Buttons+0x3a>
+				Send_One();
  8000710:	f7ff ff2a 	bl	8000568 <Send_One>
  8000714:	e001      	b.n	800071a <Press_Buttons+0x3e>
+			} else {
+				Send_Zero();
  8000716:	f7ff ff0d 	bl	8000534 <Send_Zero>
+		for (uint8_t j = 0; j < BYTE; j++) {
  800071a:	7bbb      	ldrb	r3, [r7, #14]
  800071c:	3301      	adds	r3, #1
  800071e:	73bb      	strb	r3, [r7, #14]
  8000720:	7bbb      	ldrb	r3, [r7, #14]
  8000722:	2b07      	cmp	r3, #7
  8000724:	d9e4      	bls.n	80006f0 <Press_Buttons+0x14>
+	for (uint8_t i = 0; i < MAX_BUTTONS_TO_PRESS; i++) {
  8000726:	7bfb      	ldrb	r3, [r7, #15]
  8000728:	3301      	adds	r3, #1
  800072a:	73fb      	strb	r3, [r7, #15]
  800072c:	7bfb      	ldrb	r3, [r7, #15]
  800072e:	2b1f      	cmp	r3, #31
  8000730:	d9db      	bls.n	80006ea <Press_Buttons+0xe>
+			}
+		}
+	}
+
+	// Stop bit
+	Send_One();
  8000732:	f7ff ff19 	bl	8000568 <Send_One>
+}
  8000736:	bf00      	nop
  8000738:	3710      	adds	r7, #16
  800073a:	46bd      	mov	sp, r7

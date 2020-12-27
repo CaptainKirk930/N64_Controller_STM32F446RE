@@ -128,7 +128,6 @@ int main(void)
 
   // Initialize controller status
   Update_Controller_Status(&N64_controller, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
